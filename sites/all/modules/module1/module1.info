@@ -1,0 +1,5 @@
+; &Id: $
+name = Module1
+description = module number one
+version = 7.x-dev
+core = 7.x

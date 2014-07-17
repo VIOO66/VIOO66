@@ -1,0 +1,153 @@
+
+<?php
+
+
+function my_tags_block_info() {
+  // This example comes from node.module.
+  $blocks = array();
+
+  $blocks['my_first_block'] = array(
+    'info' => t('My custom block'),
+    // DRUPAL_CACHE_PER_ROLE will be assumed.
+  );
+
+  return $blocks;
+}
+
+
+function my_tags_block_view($delta = '') {
+ 
+  $block = array();
+  switch ($delta) {
+    case 'my_first_block':
+      $result = db_query('SELECT COUNT(`entity_id` ) icount, `field_tags_tid`, `taxonomy_term_data`.`name`, `revision_id`
+        FROM  `field_data_field_tags` 
+        INNER JOIN `taxonomy_term_data` 
+        ON `taxonomy_term_data`.`tid`=`field_data_field_tags`.`field_tags_tid`
+        GROUP BY `field_tags_tid`
+        ORDER BY icount DESC 
+        LIMIT 0 , 10');
+
+
+      foreach ($result as $record) {
+        
+        $list[] = l($record->name, 'termpage/'.$record->field_tags_tid);
+
+      }
+      //dpm($list);
+
+      $block['subject'] = t('Popular tags');
+      $block['content'] = theme('item_list', array('items' => $list));;
+      break;
+  }
+
+  return $block;
+}
+
+/**
+* Implements hook_menu()
+*/  
+function my_tags_menu(){
+ 
+ 
+ $items = array();
+
+    $items ['termpage'] = array(
+        'title' => t('Titlu'),    
+        'page callback' => 'my_term_page',
+        'page arguments' => array(1), 
+        'access callback' => TRUE,
+        );
+
+    $items['my_form'] = array(
+    'title' => 'Forma',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('form_ex'),
+    'access callback' => TRUE,
+
+
+  );
+
+    return $items;            
+}
+  
+
+function form_ex ($form, &$form_state) {
+  $form['description'] = array(
+    '#type' => 'item',
+    '#title' => t('Config'),
+  );
+
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Name'),
+  );
+
+  // Adds a simple submit button that refreshes the form and clears its
+  // contents. This is the default behavior for forms.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+  );
+  return $form;
+}
+
+
+function form_ex_submit($form, &$form_state) {
+
+variable_set('site_name', $form_state['values']['name']);
+}
+
+
+function form_ex_validate($form, &$form_state) {
+$name=($form_state['values']['name']);
+if (!(ctype_alpha($name)))
+{
+form_set_error('', t('Enter a valid name'));
+
+}
+}
+
+
+function my_term_page($nid=5){
+
+ $query = new EntityFieldQuery();
+ $query -> entityCondition('entity_type','node');
+ $query -> fieldCondition('field_tags','tid',$nid);
+ $result = $query -> execute();
+ dpm($result);
+
+  if (isset($result['node'])){
+    $news_items_nids = array_keys($result['node']);
+    $news_items = entity_load('node',$news_items_nids);
+  }
+dpm($news_items);
+
+foreach ($news_items as $node) {
+  $nodeView = node_view($node, 'teaser');
+  $output[] = render($nodeView);
+ 
+   }
+
+
+
+// $node = node_load($nid);
+// dpm($node);
+// $out = node_view($node, 'teaser');
+// $title = $node->title;
+// $body = $node ->body['und'][0]['value'];
+
+
+ return theme('item_list', array('items' => $output));
+}
+
+
+
+
+/**
+ * Allowing %user access
+ */
+function myaccess() {
+    global $user;
+    return user_access('user_access');
+   }
