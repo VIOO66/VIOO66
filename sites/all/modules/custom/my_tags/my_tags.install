@@ -1,0 +1,30 @@
+<?php
+
+function my_tags_schema() {
+  $schema['my_form_modules'] = array(
+    'description' => 'The base table for nodes.',
+    'fields' => array(
+      'id_m' => array(
+        'description' => 'The primary identifier for a node.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+        'name' => array(
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'surname' => array(
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id_m'),
+  );
+  return $schema;
+}
+
