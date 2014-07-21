@@ -27,9 +27,8 @@ function my_tags_block_view($delta = '') {
         GROUP BY `field_tags_tid`
         ORDER BY icount DESC 
         LIMIT 0 , 10');
-
-
-      foreach ($result as $record) {
+      
+ foreach ($result as $record) {
         
         $list[] = l($record->name, 'termpage/'.$record->field_tags_tid);
 
@@ -60,29 +59,131 @@ function my_tags_menu(){
         );
 
     $items['my_form'] = array(
-    'title' => 'Forma',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('form_ex'),
-    'access callback' => TRUE,
+        'title' => 'Forma',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('form_ex'),
+        'access callback' => TRUE,
+        );
 
-
-  );
 
     return $items;            
 }
   
 
 function form_ex ($form, &$form_state) {
-  $form['description'] = array(
-    '#type' => 'item',
-    '#title' => t('Config'),
+
+  $form['first_name'] = array(
+'#required' => TRUE,
+'#type' => 'textfield',
+'#attributes' =>array('placeholder' => t('First Name')),
+);
+$form['last_name'] = array(
+'#required' => TRUE,
+'#type' => 'textfield',
+'#attributes' =>array('placeholder' => t('Last Name')),
+
+);
+$age = range(1, 90);
+$form['age_list']=array(
+'#type'=>'select',
+'#title' => t('Age'),
+'#options' => $age,
+''#required' => TRUE,
+);
+
+
+   $form['movie_type'] = array(
+    '#type' => 'radios',
+    '#options' => array(
+      'action'   => t('Action'),
+      'comedy' => t('Comedy'),
+      'drama'      => t('Drama'),
+    ),
+    '#title' => t('Choose a type of movie'),
   );
+
+  $query = db_select('node', 'n');
+$query->fields('n', array('title'));
+$query->join('field_data_field_category_m', 'f', 'n.nid = f.entity_id');
+$query->join('taxonomy_term_data', 't', 'f.field_category_m_tid = t.tid');
+$query->fields('t', array('name'));
+
+$result = $query -> execute();
+foreach ($result as $row) {
+if ($row -> name == 'Action') $items[0][] = $row -> title;
+if ($row -> name == 'Comedy') $items[1][] = $row -> title;
+if ($row -> name == 'Drama') $items[2][] = $row -> title;
+}
+
+  $form['action'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Action movies'),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="movie_type"]' => array('value' => 'action'),
+      ),
+    ),
+  );
+
+  $form['action']['tests_taken'] = array(
+    '#type' => 'checkboxes',
+    '#options' => $items[0],
+'#states' => array(
+'visible' => array(
+':input[name="radio"]' => array('value' => 'action'),),
+),
+  );
+
+
+  $form['comedy'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Comedy movies'),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="movie_type"]' => array('value' => 'comedy'),
+      ),
+    ),
+  );
+
+  $form['comedy']['tests_taken'] = array(
+    '#type' => 'checkboxes',
+    '#options' => $items[1],
+'#states' => array(
+'visible' => array(
+':input[name="radio"]' => array('value' => 'comedy'),),
+),
+  );
+
+
+
+  $form['drama'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Drama movies'),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="movie_type"]' => array('value' => 'drama'),
+      ),
+    ),
+  );
+
+  $form['drama']['tests_taken'] = array(
+    '#type' => 'checkboxes',
+      '#options' => $items[2],
+'#states' => array(
+'visible' => array(
+':input[name="radio"]' => array('value' => 'drama'),),
+),
+  );
+
+
+
 
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Name'),
   );
 
+ 
   // Adds a simple submit button that refreshes the form and clears its
   // contents. This is the default behavior for forms.
   $form['submit'] = array(
