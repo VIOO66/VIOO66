@@ -72,141 +72,130 @@ function my_tags_menu(){
 
 function form_ex ($form, &$form_state) {
 
-  $form['first_name'] = array(
+
+$form['first_name'] = array(
 '#required' => TRUE,
 '#type' => 'textfield',
+'#maxlength' => 30,
 '#attributes' =>array('placeholder' => t('First Name')),
 );
 $form['last_name'] = array(
 '#required' => TRUE,
 '#type' => 'textfield',
+'#maxlength' => 30,
 '#attributes' =>array('placeholder' => t('Last Name')),
-
 );
-$age = range(1, 90);
+$age = range(16, 80);
 $form['age_list']=array(
 '#type'=>'select',
 '#title' => t('Age'),
-'#options' => $age,
-''#required' => TRUE,
+'#options' => drupal_map_assoc($age),
+'#multiple' => false,
+'#required' => TRUE,
 );
-
-
-   $form['movie_type'] = array(
-    '#type' => 'radios',
-    '#options' => array(
-      'action'   => t('Action'),
-      'comedy' => t('Comedy'),
-      'drama'      => t('Drama'),
-    ),
-    '#title' => t('Choose a type of movie'),
-  );
-
-  $query = db_select('node', 'n');
-$query->fields('n', array('title'));
+$form['radio'] = array(
+'#required' => TRUE,
+'#title' => t('Select category'),
+'#type' => 'radios',
+'#options' => array(
+'4' => t('Comedy'),
+'2' => t('Action'),
+'6' => t('Drama')),
+);
+$query = db_select('node', 'n');
+$query->fields('n', array('title', 'nid'));
 $query->join('field_data_field_category_m', 'f', 'n.nid = f.entity_id');
 $query->join('taxonomy_term_data', 't', 'f.field_category_m_tid = t.tid');
 $query->fields('t', array('name'));
-
-$result = $query -> execute();
+$result = $query->execute();
 foreach ($result as $row) {
-if ($row -> name == 'Action') $items[0][] = $row -> title;
-if ($row -> name == 'Comedy') $items[1][] = $row -> title;
-if ($row -> name == 'Drama') $items[2][] = $row -> title;
+if ($row -> name == 'Comedy') $items[0][$row->nid] = $row->title;
+if ($row -> name == 'Action') $items[1][$row->nid] = $row->title;
+if ($row -> name == 'Drama') $items[2][$row->nid] = $row->title;
 }
-
-  $form['action'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Action movies'),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="movie_type"]' => array('value' => 'action'),
-      ),
-    ),
-  );
-
-  $form['action']['tests_taken'] = array(
-    '#type' => 'checkboxes',
-    '#options' => $items[0],
+$form['comedy_movies'] = array(
+'#type' => 'fieldset',
+'#title' => 'Choose a comedy movie',
+);
+$form['comedy_movies']['comedy'] = array(
+'#type' => 'checkboxes',
+'#options' => $items[0],
 '#states' => array(
 'visible' => array(
-':input[name="radio"]' => array('value' => 'action'),),
+':input[name="radio"]' => array('value' => '4'),),
 ),
-  );
-
-
-  $form['comedy'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Comedy movies'),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="movie_type"]' => array('value' => 'comedy'),
-      ),
-    ),
-  );
-
-  $form['comedy']['tests_taken'] = array(
-    '#type' => 'checkboxes',
-    '#options' => $items[1],
+);
+$form['action_movies'] = array(
+'#type' => 'fieldset',
+'#title' => 'Choose an action movie',
+);
+$form['action_movies']['action'] = array(
+'#type' => 'checkboxes',
+'#options' => $items[1],
 '#states' => array(
 'visible' => array(
-':input[name="radio"]' => array('value' => 'comedy'),),
+':input[name="radio"]' => array('value' => '2'),),
 ),
-  );
-
-
-
-  $form['drama'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Drama movies'),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="movie_type"]' => array('value' => 'drama'),
-      ),
-    ),
-  );
-
-  $form['drama']['tests_taken'] = array(
-    '#type' => 'checkboxes',
-      '#options' => $items[2],
+);
+$form['drama_movies'] = array(
+'#type' => 'fieldset',
+'#title' => 'Choose a drama movie',
+);
+$form['drama_movies']['drama'] = array(
+'#type' => 'checkboxes',
+'#options' => $items[2],
 '#states' => array(
 'visible' => array(
-':input[name="radio"]' => array('value' => 'drama'),),
+':input[name="radio"]' => array('value' => '6'),),
 ),
-  );
+);
+$form['submit'] = array(
+'#type' => 'submit',
+'#value' => 'Submit',
+);
+return $form;
 
-
-
-
-  $form['name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Name'),
-  );
+  // $form['name'] = array(
+  //   '#type' => 'textfield',
+  //   '#title' => t('Name'),
+  // );
 
  
   // Adds a simple submit button that refreshes the form and clears its
   // contents. This is the default behavior for forms.
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => 'Submit',
-  );
-  return $form;
+
 }
 
 
 function form_ex_submit($form, &$form_state) {
-
-variable_set('site_name', $form_state['values']['name']);
+$first_name = $form_state['values']['first_name'];
+$last_name = $form_state['values']['last_name'];
+$age = $form_state['values']['age_list'];
+$category = $form_state['values']['radio'];
+if ($category == '4') $checked = $form_state['values']['comedy'];
+if ($category == '2') $checked = $form_state['values']['action'];
+if ($category == '6') $checked = $form_state['values']['drama'];
+$result = array();
+foreach ($checked as $key => $value) {
+if($value != '0') $result[] = $value;
 }
+$insert = db_insert('my_form_modules')
+->fields(array(
+'name' => $first_name,
+'surname' => $last_name,
+'age' => $age,
+'category' => $category,
+'movies' => serialize($result),
+))
+->execute();
 
-
+}
 function form_ex_validate($form, &$form_state) {
-$name=($form_state['values']['name']);
-if (!(ctype_alpha($name)))
-{
-form_set_error('', t('Enter a valid name'));
 
-}
+  $first_name = $form_state['values']['first_name'];
+$last_name = $form_state['values']['last_name'];
+if (strlen($first_name > 30)) form_set_error('name', t('First name could not be longer then 30 characters'));
+if (strlen($last_name > 30)) form_set_error('name', t('Last name could not be longer then 30 characters'));
 }
 
 

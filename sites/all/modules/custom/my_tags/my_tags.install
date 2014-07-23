@@ -22,7 +22,26 @@ function my_tags_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-    ),
+      'age' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => '18',
+      ),
+        'category' => array(
+        'description' => 'Category',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => '0',
+      ),
+        'movies' => array(
+        'description' => 'Movies',
+        'serialized' => TRUE,
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+),
     'primary key' => array('id_m'),
   );
   return $schema;
