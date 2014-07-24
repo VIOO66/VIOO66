@@ -69,9 +69,63 @@ function my_tags_menu(){
         'access callback' => TRUE,
         );
 
+    $items['edit_form/%'] = array(
+        'title' => 'Forma',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('edit_form_up_test',1),
+        'access callback' => TRUE,
+        );
+
+
     return $items;            
 }
   
+
+function edit_form_up_test($form, &$form_state, $nodeid = NULL) {
+
+
+$form['#prefix'] = '<div id="status">';
+    $form['#suffix'] = '</div>';
+    $form['mtitle'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+    '#ajax' => array(
+        'callback' => 'advanced_form_callback',
+        'wrapper' => 'status',),
+         );
+  
+  $form['#submit'] = array('edit_form_up_test_submit') ;
+  return $form;
+
+}
+
+function advanced_form_callback($form, &$form_state)
+{
+
+  return $form;
+}
+
+
+function edit_form_up_test_submit($form, &$form_state) {
+dpm($form_state);
+
+$title = $form_state['values']['mtitle'];
+$nid = $form_state ['build_info']['args'][0];
+$node = node_load($nid);
+$node->title = $title;
+node_save($node);
+
+}
+function edit_form_up_test_validate($form, &$form_state) {
+
+
+}
+
 
 function form_ex ($form, &$form_state) {
 
@@ -237,7 +291,7 @@ foreach ($news_items as $node) {
 
 function results() {
 
-$header = array('ID', 'First Name', 'Last Name', 'Age', 'Category', 'Movies');
+$header = array('ID', 'First Name', 'Last Name', 'Age', 'Category', 'Movies', 'Edit');
 $rows = array();
 
   $query = db_select('my_form_modules', 's');
@@ -248,12 +302,15 @@ $result = $query->execute();
 foreach ($result as $key => $row)
 { 
 $name = '';
+$rrr = '';
 $nodes = entity_load('node', unserialize($row->movies));
 foreach ($nodes as $value)
 {
 $name = $name . $value->title . '</br>';
+$rrr= $rrr . l(t('Edit'), 'edit_form/'.$value->nid). '</br>';
 }
-$rows[] = array($row->id_m, $row->fname, $row->surname, $row->age, $row->name, $name);
+
+$rows[] = array($row->id_m, $row->fname, $row->surname, $row->age, $row->name, $name, $rrr);
 }
   return theme('table', array('header' => $header, 'rows' => $rows));
 
