@@ -1,7 +1,5 @@
 
 <?php
-
-
 function my_tags_block_info() {
   // This example comes from node.module.
   $blocks = array();
@@ -21,14 +19,15 @@ function my_tags_block_view($delta = '') {
   switch ($delta) {
     case 'my_first_block':
       $result = db_query('SELECT COUNT(`entity_id` ) icount, `field_tags_tid`, `taxonomy_term_data`.`name`, `revision_id`
-        FROM  `field_data_field_tags` 
-        INNER JOIN `taxonomy_term_data` 
-        ON `taxonomy_term_data`.`tid`=`field_data_field_tags`.`field_tags_tid`
-        GROUP BY `field_tags_tid`
-        ORDER BY icount DESC 
-        LIMIT 0 , 10');
-      
- foreach ($result as $record) {
+FROM `field_data_field_tags`
+INNER JOIN `taxonomy_term_data`
+ON `taxonomy_term_data`.`tid`=`field_data_field_tags`.`field_tags_tid`
+GROUP BY `field_tags_tid`
+ORDER BY icount DESC
+LIMIT 0 , 10');
+
+
+      foreach ($result as $record) {
         
         $list[] = l($record->name, 'termpage/'.$record->field_tags_tid);
 
@@ -42,7 +41,6 @@ function my_tags_block_view($delta = '') {
 
   return $block;
 }
-
 /**
 * Implements hook_menu()
 */  
@@ -65,6 +63,11 @@ function my_tags_menu(){
         'access callback' => TRUE,
         );
 
+    $items ['results'] = array(
+        'title' => t('Results'),    
+        'page callback' => 'results',
+        'access callback' => TRUE,
+        );
 
     return $items;            
 }
@@ -181,7 +184,7 @@ if($value != '0') $result[] = $value;
 }
 $insert = db_insert('my_form_modules')
 ->fields(array(
-'name' => $first_name,
+'fname' => $first_name,
 'surname' => $last_name,
 'age' => $age,
 'category' => $category,
@@ -232,7 +235,29 @@ foreach ($news_items as $node) {
 }
 
 
+function results() {
 
+$header = array('ID', 'First Name', 'Last Name', 'Age', 'Category', 'Movies');
+$rows = array();
+
+  $query = db_select('my_form_modules', 's');
+$query->fields('s');
+$query->join('taxonomy_term_data', 't', 's.category = t.tid');
+$query->fields('t', array('name'));
+$result = $query->execute();
+foreach ($result as $key => $row)
+{ 
+$name = '';
+$nodes = entity_load('node', unserialize($row->movies));
+foreach ($nodes as $value)
+{
+$name = $name . $value->title . '</br>';
+}
+$rows[] = array($row->id_m, $row->fname, $row->surname, $row->age, $row->name, $name);
+}
+  return theme('table', array('header' => $header, 'rows' => $rows));
+
+}
 
 /**
  * Allowing %user access

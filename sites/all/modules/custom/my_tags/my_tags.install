@@ -10,7 +10,7 @@ function my_tags_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-        'name' => array(
+        'fname' => array(
         'type' => 'varchar',
         'length' => 30,
         'not null' => TRUE,
